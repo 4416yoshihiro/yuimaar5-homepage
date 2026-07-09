@@ -1,0 +1,19 @@
+GitHubアップロード手順
+
+1. GitHubのリポジトリ画面を開く
+2. Code を押す
+3. Add file → Upload files を押す
+4. このフォルダの「中身」をすべて選択してアップロード画面へドラッグ
+
+重要:
+このフォルダ自体ではなく、中に入っている index.html、assets、styles.css などをアップロードしてください。
+GitHubのリポジトリ直下に index.html が見える状態が正解です。
+
+アップロード後:
+1. Commit changes を押す
+2. Settings → Pages を開く
+3. Source: Deploy from a branch
+4. Branch: main / root
+5. Save
+
+数分後に公開URLが表示されます。
