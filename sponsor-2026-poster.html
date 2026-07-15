@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="一般社団法人ベースボール沖縄Y5・結マール5の2026年度スポンサー募集ポスター。"
+    >
+    <title>2026年度スポンサー募集ポスター | 結マール5</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&family=Oswald:wght@600;700&display=swap"
+      rel="stylesheet"
+    >
+    <style>
+      :root {
+        --navy: #061b4f;
+        --deep: #031238;
+        --panel: #071a4c;
+        --red: #f01443;
+        --gold: #ffcc45;
+        --orange: #ff8b4c;
+        --white: #fff;
+        --ink: #10131a;
+        --muted: rgba(255, 255, 255, 0.78);
+        --line: rgba(255, 255, 255, 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--white);
+        background: #d8dce5;
+        font-family: "Noto Sans JP", sans-serif;
+      }
+
+      .deck {
+        display: grid;
+        gap: 12mm;
+        padding: 12mm 0;
+      }
+
+      .page {
+        position: relative;
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.13), transparent 42mm),
+          linear-gradient(180deg, rgba(3, 18, 56, 0.96), rgba(3, 18, 56, 0.99)),
+          var(--deep);
+        break-after: page;
+      }
+
+      .page::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 5mm;
+        background: var(--red);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8mm;
+        padding: 9mm 13mm 7mm;
+        color: var(--navy);
+        background: var(--white);
+      }
+
+      .topbar img {
+        width: 45mm;
+        display: block;
+      }
+
+      .topbar span {
+        font-family: "Oswald", sans-serif;
+        font-size: 11pt;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+
+      .inner {
+        position: relative;
+        z-index: 1;
+        padding: 12mm 13mm;
+      }
+
+      .eyebrow {
+        margin: 0 0 4mm;
+        color: var(--gold);
+        font-family: "Oswald", sans-serif;
+        font-size: 16pt;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1,
+      .display-title {
+        font-family: "Oswald", "Noto Sans JP", sans-serif;
+        font-size: 62pt;
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+
+      .jp-title {
+        margin-top: 8mm;
+        font-size: 27pt;
+        font-weight: 900;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .lead {
+        margin-top: 8mm;
+        max-width: 132mm;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14pt;
+        font-weight: 900;
+        line-height: 1.75;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1fr 61mm;
+        gap: 9mm;
+        align-items: center;
+        min-height: 146mm;
+      }
+
+      .hero-photo,
+      .photo-card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+      }
+
+      .hero-photo {
+        height: 78mm;
+      }
+
+      .hero-photo img,
+      .photo-card img,
+      .activity-photo img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .hero-photo img {
+        object-position: center 58%;
+      }
+
+      .cover-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4mm;
+        margin-top: 12mm;
+      }
+
+      .photo-card {
+        height: 52mm;
+      }
+
+      .photo-card:nth-child(1) img {
+        object-position: center 58%;
+      }
+
+      .photo-card:nth-child(2) img {
+        object-position: center 46%;
+      }
+
+      .photo-card:nth-child(3) img {
+        object-position: center 54%;
+      }
+
+      .message-box {
+        display: grid;
+        grid-template-columns: 1fr 50mm;
+        gap: 6mm;
+        align-items: center;
+        margin-top: 11mm;
+        padding: 7mm;
+        color: var(--ink);
+        background: var(--white);
+        border-bottom: 5mm solid var(--red);
+      }
+
+      .message-box strong {
+        display: block;
+        color: var(--navy);
+        font-size: 18pt;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .message-box p {
+        margin-top: 3mm;
+        font-size: 10.6pt;
+        font-weight: 800;
+        line-height: 1.65;
+      }
+
+      .price-badge {
+        display: grid;
+        place-items: center;
+        min-height: 38mm;
+        color: #07123a;
+        background: linear-gradient(180deg, var(--gold), var(--orange));
+        border-radius: 5px;
+        font-family: "Oswald", sans-serif;
+        font-size: 31pt;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .price-badge span {
+        display: block;
+        margin-top: 1mm;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 9.8pt;
+      }
+
+      .section-title {
+        margin-bottom: 8mm;
+      }
+
+      .section-title h2 {
+        font-size: 30pt;
+        font-weight: 900;
+        line-height: 1.16;
+        white-space: nowrap;
+      }
+
+      .section-title p {
+        margin-top: 3mm;
+        color: var(--muted);
+        font-size: 11pt;
+        font-weight: 800;
+        line-height: 1.55;
+      }
+
+      .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6mm;
+      }
+
+      .plan-card {
+        min-height: 66mm;
+        padding: 6mm;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)),
+          var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .plan-card.featured {
+        color: var(--ink);
+        background: var(--white);
+        border-bottom: 5mm solid var(--red);
+      }
+
+      .plan-card h3 {
+        color: var(--gold);
+        font-family: "Oswald", sans-serif;
+        font-size: 26pt;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .plan-card.featured h3 {
+        color: var(--navy);
+      }
+
+      .plan-name {
+        display: block;
+        margin-top: 2mm;
+        font-size: 16pt;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .plan-price {
+        margin-top: 3mm;
+        font-family: "Oswald", sans-serif;
+        font-size: 34pt;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .plan-card ul,
+      .benefit-list {
+        display: grid;
+        gap: 2mm;
+        margin: 5mm 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .plan-card li,
+      .benefit-list li {
+        position: relative;
+        padding-left: 5mm;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 10.2pt;
+        font-weight: 800;
+        line-height: 1.55;
+      }
+
+      .plan-card.featured li {
+        color: rgba(16, 19, 26, 0.82);
+      }
+
+      .plan-card li::before,
+      .benefit-list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.58em;
+        width: 2.2mm;
+        height: 2.2mm;
+        border-radius: 999px;
+        background: var(--red);
+      }
+
+      .benefit-band {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6mm;
+        margin-top: 8mm;
+      }
+
+      .benefit-box {
+        padding: 6mm;
+        background: #061741;
+        border-left: 2mm solid var(--red);
+      }
+
+      .benefit-box h3 {
+        margin-bottom: 3mm;
+        color: var(--gold);
+        font-family: "Oswald", sans-serif;
+        font-size: 18pt;
+        white-space: nowrap;
+      }
+
+      .uniform-stage {
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 8mm;
+        align-items: center;
+      }
+
+      .uniform-board {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5mm;
+      }
+
+      .jersey-card {
+        padding: 5mm;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 5px;
+      }
+
+      .jersey-card h3 {
+        margin-bottom: 3mm;
+        color: var(--gold);
+        font-family: "Oswald", sans-serif;
+        font-size: 17pt;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .jersey {
+        position: relative;
+        height: 88mm;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 32%, rgba(255, 255, 255, 0.16), transparent 26mm),
+          linear-gradient(180deg, #2258cc, #061f6b 72%);
+        clip-path: polygon(18% 0, 35% 0, 41% 9%, 59% 9%, 65% 0, 82% 0, 100% 25%, 87% 39%, 78% 29%, 78% 100%, 22% 100%, 22% 29%, 13% 39%, 0 25%);
+      }
+
+      .jersey::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 28mm;
+        height: 13mm;
+        border-radius: 0 0 18mm 18mm;
+        transform: translateX(-50%);
+        background: var(--red);
+      }
+
+      .jersey::after {
+        content: "Y5";
+        position: absolute;
+        left: 50%;
+        top: 26mm;
+        color: rgba(255, 255, 255, 0.2);
+        font-family: "Oswald", sans-serif;
+        font-size: 52pt;
+        font-weight: 700;
+        line-height: 1;
+        transform: translateX(-50%);
+      }
+
+      .jersey-back::after {
+        content: "5";
+        top: 28mm;
+        font-size: 58pt;
+      }
+
+      .uniform-logo {
+        position: absolute;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        padding: 1.5mm;
+        color: var(--deep);
+        background: var(--gold);
+        border: 1px solid rgba(3, 18, 56, 0.3);
+        border-radius: 3px;
+        font-size: 8.5pt;
+        font-weight: 900;
+        line-height: 1.15;
+        text-align: center;
+        box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22);
+      }
+
+      .uniform-logo.main {
+        left: 50%;
+        top: 42mm;
+        width: 57mm;
+        min-height: 16mm;
+        transform: translateX(-50%);
+        font-size: 10pt;
+      }
+
+      .uniform-logo.chest-small {
+        left: 50%;
+        top: 20mm;
+        width: 35mm;
+        height: 8mm;
+        transform: translateX(-50%);
+        background: var(--white);
+      }
+
+      .uniform-logo.shoulder-left,
+      .uniform-logo.shoulder-right {
+        top: 24mm;
+        width: 21mm;
+        height: 8mm;
+        font-size: 7.3pt;
+      }
+
+      .uniform-logo.shoulder-left {
+        left: 3mm;
+        transform: rotate(-25deg);
+      }
+
+      .uniform-logo.shoulder-right {
+        right: 3mm;
+        transform: rotate(25deg);
+      }
+
+      .uniform-logo.back-top {
+        left: 50%;
+        top: 15mm;
+        width: 52mm;
+        height: 10mm;
+        transform: translateX(-50%);
+        background: var(--white);
+      }
+
+      .uniform-logo.back-main {
+        left: 50%;
+        top: 57mm;
+        width: 57mm;
+        height: 13mm;
+        transform: translateX(-50%);
+      }
+
+      .placement-grid {
+        display: grid;
+        gap: 4mm;
+      }
+
+      .placement-item {
+        padding: 5mm;
+        background: rgba(255, 255, 255, 0.07);
+        border-left: 2mm solid var(--gold);
+      }
+
+      .placement-item strong {
+        display: block;
+        color: var(--gold);
+        font-family: "Oswald", sans-serif;
+        font-size: 23pt;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .placement-item span {
+        display: block;
+        margin-top: 2mm;
+        font-size: 12pt;
+        font-weight: 900;
+        line-height: 1.4;
+      }
+
+      .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5mm;
+      }
+
+      .activity {
+        display: grid;
+        min-height: 92mm;
+        overflow: hidden;
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .activity-photo {
+        height: 48mm;
+        overflow: hidden;
+      }
+
+      .activity:nth-child(1) img {
+        object-position: center 58%;
+      }
+
+      .activity:nth-child(2) img {
+        object-position: center 55%;
+      }
+
+      .activity:nth-child(3) img {
+        object-position: center 42%;
+      }
+
+      .activity-body {
+        padding: 5mm;
+      }
+
+      .activity-body h3 {
+        color: var(--gold);
+        font-size: 14pt;
+        font-weight: 900;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .activity-body p {
+        margin-top: 3mm;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 9.6pt;
+        font-weight: 800;
+        line-height: 1.55;
+      }
+
+      .contact-panel {
+        display: grid;
+        grid-template-columns: 1fr 55mm;
+        gap: 8mm;
+        align-items: center;
+        margin-top: 10mm;
+        padding: 7mm;
+        color: var(--ink);
+        background: var(--white);
+        border-bottom: 5mm solid var(--red);
+      }
+
+      .contact-panel h3 {
+        color: var(--navy);
+        font-size: 22pt;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .contact-panel p {
+        margin-top: 3mm;
+        font-size: 11pt;
+        font-weight: 800;
+        line-height: 1.65;
+      }
+
+      .contact-pill {
+        display: grid;
+        place-items: center;
+        min-height: 30mm;
+        color: var(--white);
+        background: var(--red);
+        font-size: 16pt;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .page-number {
+        position: absolute;
+        right: 12mm;
+        bottom: 8mm;
+        color: rgba(255, 255, 255, 0.45);
+        font-family: "Oswald", sans-serif;
+        font-size: 10pt;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .deck {
+          display: block;
+          padding: 0;
+        }
+
+        .page {
+          margin: 0;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .deck {
+          gap: 0;
+          padding: 0;
+        }
+
+        .page {
+          width: 100%;
+          min-height: auto;
+        }
+
+        .topbar,
+        .inner {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+
+        .hero-grid,
+        .message-box,
+        .benefit-band,
+        .uniform-stage,
+        .contact-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .cover-strip,
+        .activity-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .plan-grid,
+        .uniform-board {
+          grid-template-columns: 1fr;
+        }
+
+        h1,
+        .display-title {
+          font-size: clamp(4rem, 18vw, 6rem);
+        }
+
+        .jp-title,
+        .section-title h2,
+        .message-box strong,
+        .activity-body h3,
+        .contact-panel h3 {
+          white-space: normal;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck">
+      <section class="page">
+        <header class="topbar">
+          <img src="assets/yuimaar5-header-wordmark.jpg" alt="結マール5">
+          <span>Baseball Okinawa Y5 / Sponsor Proposal</span>
+        </header>
+
+        <div class="inner">
+          <div class="hero-grid">
+            <div>
+              <p class="eyebrow">2026 Official Partners</p>
+              <h1>PARTNERS</h1>
+              <p class="jp-title">2026年度スポンサー募集</p>
+              <p class="lead">
+                沖縄からBaseball5を広げる結マール5の挑戦を、ユニフォーム・大会・子ども向けイベント・学校教育の現場で共に届けてくださるスポンサーを募集します。
+              </p>
+            </div>
+            <figure class="hero-photo">
+              <img src="assets/team-shurijo-photo.jpg" alt="結マール5のチーム写真">
+            </figure>
+          </div>
+
+          <div class="cover-strip">
+            <figure class="photo-card"><img src="assets/local-game-3-gallery-10.jpg" alt="Baseball5のプレー"></figure>
+            <figure class="photo-card"><img src="assets/kids-event-bg.jpg" alt="子ども向けイベント"></figure>
+            <figure class="photo-card"><img src="assets/school-program-bg.jpg" alt="学校教育での特別授業"></figure>
+          </div>
+
+          <div class="message-box">
+            <div>
+              <strong>ロゴが見える場所を、活動の熱量と一緒に増やしていきます。</strong>
+              <p>
+                ユニフォーム、公式ホームページ、SNS、大会・体験会の掲出物で協賛企業・団体を紹介します。
+              </p>
+            </div>
+            <div class="price-badge">20万円<span>冠スポンサー</span></div>
+          </div>
+        </div>
+        <span class="page-number">01</span>
+      </section>
+
+      <section class="page">
+        <header class="topbar">
+          <img src="assets/yuimaar5-header-wordmark.jpg" alt="結マール5">
+          <span>Partner Menu</span>
+        </header>
+
+        <div class="inner">
+          <div class="section-title">
+            <p class="eyebrow">Sponsorship Plan</p>
+            <h2>応援のかたちを、選びやすく。</h2>
+            <p>ユニフォーム掲載の大きさ、ホームページでの紹介、イベントでの掲出を組み合わせた協賛プランです。</p>
+          </div>
+
+          <div class="plan-grid">
+            <article class="plan-card featured">
+              <h3>Naming Partner</h3>
+              <span class="plan-name">冠スポンサー</span>
+              <p class="plan-price">20万円</p>
+              <ul>
+                <li>公式ユニフォームの胸メインに大きく掲載</li>
+                <li>大会・イベント名への冠協賛表記</li>
+                <li>ホームページ、SNS、チラシで大きく紹介</li>
+              </ul>
+            </article>
+
+            <article class="plan-card">
+              <h3>Large</h3>
+              <span class="plan-name">大スポンサー</span>
+              <p class="plan-price">10万円</p>
+              <ul>
+                <li>背中・胸下など目立つ位置へロゴ掲載</li>
+                <li>ホームページ内で大きめに掲載</li>
+                <li>イベント告知物、SNS投稿で協賛紹介</li>
+              </ul>
+            </article>
+
+            <article class="plan-card">
+              <h3>Middle</h3>
+              <span class="plan-name">中スポンサー</span>
+              <p class="plan-price">5万円</p>
+              <ul>
+                <li>肩・袖・背面候補へロゴ掲載</li>
+                <li>ホームページ内でロゴ掲載</li>
+                <li>大会・体験会の協賛一覧へ掲載</li>
+              </ul>
+            </article>
+
+            <article class="plan-card">
+              <h3>Small / Support</h3>
+              <span class="plan-name">小スポンサー・応援スポンサー</span>
+              <p class="plan-price">3万円 / 1万円</p>
+              <ul>
+                <li>小枠、イベント掲出物、協賛欄へ掲載</li>
+                <li>SNSやイベント報告で名前・ロゴを紹介</li>
+                <li>地域普及活動を支える協賛枠</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="benefit-band">
+            <div class="benefit-box">
+              <h3>MERIT</h3>
+              <ul class="benefit-list">
+                <li>日本選手権公式ユニフォームへの掲載で継続的に露出</li>
+                <li>子ども向けイベント、学校教育、地域大会で企業名を紹介</li>
+                <li>沖縄の新しいスポーツ文化とU-18世代の育成を応援</li>
+              </ul>
+            </div>
+            <div class="benefit-box">
+              <h3>2026 SCHEDULE</h3>
+              <ul class="benefit-list">
+                <li>8月：教員大会の開催・協賛ロゴ掲出</li>
+                <li>11月：子ども向けイベントの開催・協賛紹介</li>
+                <li>日本選手権：公式ユニフォームへのロゴ掲載</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">02</span>
+      </section>
+
+      <section class="page">
+        <header class="topbar">
+          <img src="assets/yuimaar5-header-wordmark.jpg" alt="結マール5">
+          <span>Uniform Logo Area</span>
+        </header>
+
+        <div class="inner">
+          <div class="section-title">
+            <p class="eyebrow">Official Uniform</p>
+            <h2>ユニフォーム掲載位置を、ひと目で。</h2>
+            <p>胸メイン、胸上段、袖・肩、背中上段、背中下段など、協賛プランに応じて掲載位置を調整します。</p>
+          </div>
+
+          <div class="uniform-stage">
+            <div class="uniform-board" aria-label="ユニフォームロゴ掲載位置">
+              <article class="jersey-card">
+                <h3>FRONT / 前面</h3>
+                <div class="jersey jersey-front">
+                  <span class="uniform-logo chest-small">胸上段</span>
+                  <span class="uniform-logo shoulder-left">左袖</span>
+                  <span class="uniform-logo shoulder-right">右袖</span>
+                  <span class="uniform-logo main">冠スポンサー<br>胸メイン</span>
+                </div>
+              </article>
+              <article class="jersey-card">
+                <h3>BACK / 背面</h3>
+                <div class="jersey jersey-back">
+                  <span class="uniform-logo back-top">背中上段</span>
+                  <span class="uniform-logo shoulder-left">左肩</span>
+                  <span class="uniform-logo shoulder-right">右肩</span>
+                  <span class="uniform-logo back-main">背中下段</span>
+                </div>
+              </article>
+            </div>
+
+            <div class="placement-grid">
+              <div class="placement-item">
+                <strong>20万円</strong>
+                <span>胸メイン / 冠スポンサー。日本選手権の公式ユニフォームで最も目立つ掲載枠です。</span>
+              </div>
+              <div class="placement-item">
+                <strong>10万円</strong>
+                <span>背中・胸下など大型枠。プレー中や集合写真でも認知されやすい枠です。</span>
+              </div>
+              <div class="placement-item">
+                <strong>5万円</strong>
+                <span>袖・肩・背面中枠。複数の活動写真やイベント掲出と合わせて紹介します。</span>
+              </div>
+              <div class="placement-item">
+                <strong>3万円 / 1万円</strong>
+                <span>小枠、ホームページ、SNS、イベント掲出物で応援を紹介します。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">03</span>
+      </section>
+
+      <section class="page">
+        <header class="topbar">
+          <img src="assets/yuimaar5-header-wordmark.jpg" alt="結マール5">
+          <span>Activity Exposure</span>
+        </header>
+
+        <div class="inner">
+          <div class="section-title">
+            <p class="eyebrow">Where Your Logo Appears</p>
+            <h2>活動の現場で、協賛ロゴを届けます。</h2>
+            <p>結マール5の活動は、大会、子ども向けイベント、学校教育、U-18育成へ広がっています。</p>
+          </div>
+
+          <div class="activity-grid">
+            <article class="activity">
+              <div class="activity-photo">
+                <img src="assets/local-tournament-bg.jpg" alt="ローカル大会">
+              </div>
+              <div class="activity-body">
+                <h3>ローカル大会</h3>
+                <p>大会名、告知物、会場掲出、SNS投稿など、参加者と地域に届く形で協賛企業を紹介します。</p>
+              </div>
+            </article>
+
+            <article class="activity">
+              <div class="activity-photo">
+                <img src="assets/kids-event-bg.jpg" alt="子ども向けイベント">
+              </div>
+              <div class="activity-body">
+                <h3>子ども向けイベント</h3>
+                <p>11月予定のイベントを中心に、子どもたちの体験機会を支えるパートナーとして発信します。</p>
+              </div>
+            </article>
+
+            <article class="activity">
+              <div class="activity-photo">
+                <img src="assets/school-program-bg.jpg" alt="学校教育での特別授業">
+              </div>
+              <div class="activity-body">
+                <h3>学校教育・U-18</h3>
+                <p>学校授業、教育施設での体験会、U-18カテゴリーの育成活動を通して地域の未来へつなげます。</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="contact-panel">
+            <div>
+              <h3>沖縄から、Baseball5の未来を一緒に。</h3>
+              <p>
+                結マール5の活動は、競技力向上だけでなく、子どもたちの体験機会、学校教育、地域イベントへ広がっています。応援してくださる皆さまのロゴと想いを、活動の現場で大切に届けます。
+              </p>
+            </div>
+            <div class="contact-pill">協賛受付中</div>
+          </div>
+        </div>
+        <span class="page-number">04</span>
+      </section>
+    </main>
+  </body>
+</html>
