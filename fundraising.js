@@ -20,6 +20,17 @@ custom.addEventListener('input', () => {buttons.forEach(b => {b.classList.remove
 form.addEventListener('submit', event => {
  event.preventDefault();
  if (amount <= 0) {status.textContent = '寄付金額を選択するか、円単位の正の整数で入力してください。';custom.focus();return;}
+ const bank = form.elements.payment.value;
+ const bankInfo = document.getElementById('bank-info');
+ const copyButton = document.getElementById('copy-bank');
+ document.getElementById('bank-title').textContent = bank === 'okinawa' ? '🏦 沖縄銀行 振込先' : '🏦 琉球銀行 振込先';
+ bankInfo.replaceChildren();
+ const lines = bank === 'okinawa'
+   ? ['沖縄銀行 東風平支店（店番号606）', '普通口座：0542458', '口座名義：オキナワドジャース']
+   : ['琉球銀行 新都心支店（店番号132）', '普通口座：1621287', '口座名義：シャ）ベースボールオキナワ'];
+ lines.forEach((line, index) => {if (index) bankInfo.appendChild(document.createElement('br'));bankInfo.appendChild(document.createTextNode(line));});
+ copyButton.disabled = false;
+ copyButton.textContent = '口座情報をコピーする';
  document.getElementById('paymentDialog').showModal();
 });
 document.getElementById('close-dialog').addEventListener('click', () => document.getElementById('paymentDialog').close());

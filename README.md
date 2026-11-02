@@ -18,7 +18,6 @@ http://127.0.0.1:8765/fundraising.html を開いてください。ビルドや�
 | fundraising.css | 資金造成LP専用スタイル |
 | fundraising.js | 金額選択・振込案内などのプレビュー動作 |
 | assets/fundraising-team-main.jpg | ユーザー指定のメイン写真 |
-| REVIEW.md | レビュー項目・未完了機能・公開前確認 |
 | FUNDRAISING-CONTENT.md | 確定原稿・仕様の記録（後半の更新を優先） |
 | FUNDRAISING-LP-PLAN.md | 制作手順・進捗 |
 | REFERENCE-LP-ANALYSIS.md | 参考LPの構成と連携方式の分析 |
