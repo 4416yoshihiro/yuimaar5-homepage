@@ -26,8 +26,8 @@ form.addEventListener('submit', event => {
  document.getElementById('bank-title').textContent = bank === 'okinawa' ? '🏦 沖縄銀行 振込先' : '🏦 琉球銀行 振込先';
  bankInfo.replaceChildren();
  const lines = bank === 'okinawa'
-   ? ['沖縄銀行 東風平支店（店番号606）', '普通口座：0542458', '口座名義：オキナワドジャース']
-   : ['琉球銀行 新都心支店（店番号132）', '普通口座：1621287', '口座名義：シャ）ベースボールオキナワ'];
+   ? ['沖縄銀行 新都心支店（店番号132）', '普通口座：1621287', '口座名義：シャ）ベースボールオキナワ']
+   : ['琉球銀行 東風平支店（店番号606）', '普通口座：0542458', '口座名義：オキナワドジャース'];
  lines.forEach((line, index) => {if (index) bankInfo.appendChild(document.createElement('br'));bankInfo.appendChild(document.createTextNode(line));});
  copyButton.disabled = false;
  copyButton.textContent = '口座情報をコピーする';
