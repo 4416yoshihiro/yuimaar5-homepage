@@ -40,7 +40,8 @@ function validate_(raw) {
     kana: text('kana', 100, true), email: text('email', 254, true),
     phone: text('phone', 30, true), relation: text('relation', 30, true),
     payment: text('payment', 20, true), message: text('message', 1000, false),
-    messageConsent: text('messageConsent', 3, true), amount: raw.amount
+    messageConsent: text('messageConsent', 3, true), amount: raw.amount,
+    receiptVersion: raw.receiptVersion === 2 ? 2 : 1
   };
   if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(data.requestId)) fail_('INVALID', '受付番号を生成し直してください。');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !/^[0-9+()\-\s]{6,30}$/.test(data.phone)) fail_('INVALID', 'メールアドレス・電話番号を確認してください。');
@@ -52,7 +53,7 @@ function validate_(raw) {
 
 function entries_() {
   const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('申込一覧');
-  if (!sheet || sheet.getRange('A1').getValue() !== '受付番号' || sheet.getRange('W1').getValue() !== '公開本文（自動）') throw new Error('Sheet schema mismatch');
+  if (!sheet || sheet.getRange('A1').getValue() !== '受付番号' || sheet.getRange('W1').getValue() !== '公開本文（自動）' || sheet.getRange('X1').getValue() !== '送信リクエストID（内部）') throw new Error('Sheet schema mismatch');
   return sheet;
 }
 
@@ -71,19 +72,39 @@ function inputCells_(data) {
     BANKS[data.payment], data.message, data.messageConsent === 'yes' ? '同意する' : '同意しない'];
 }
 
+// 必ず保存処理のロック内で採番。削除・書込失敗後も発行済み番号を再利用しない。
+function nextReceipt_(rows, now) {
+  const day = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMdd');
+  const properties = PropertiesService.getScriptProperties();
+  const key = 'receipt-sequence:' + day;
+  const stored = properties.getProperty(key);
+  if (stored !== null && (!/^\d+$/.test(stored) || !Number.isSafeInteger(Number(stored)))) throw new Error('Invalid receipt sequence');
+  let highest = Number(stored || 0), count = 0;
+  rows.forEach(row => {
+    if (!row[0]) return;
+    if (row[1] && Utilities.formatDate(new Date(row[1]), 'Asia/Tokyo', 'yyyyMMdd') === day) count++;
+    const match = String(row[0]).match(/^(\d{8})-(\d{3,})$/);
+    if (match && match[1] === day) highest = Math.max(highest, Number(match[2]));
+  });
+  const next = Math.max(highest, count) + 1;
+  if (!Number.isSafeInteger(next)) throw new Error('Receipt sequence exhausted');
+  properties.setProperty(key, String(next));
+  return day + '-' + String(next).padStart(3, '0');
+}
+
 function save_(data) {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) fail_('BUSY', '混み合っています。少し待って同じ内容で再送信してください。');
   try {
     const sheet = entries_();
-    const rows = sheet.getRange(2, 1, MAX_ENTRIES, 23).getValues();
-    const receiptId = 'Y5-' + data.requestId;
-    const duplicate = rows.find(row => row[0] === receiptId);
+    const rows = sheet.getRange(2, 1, MAX_ENTRIES, 24).getValues();
+    const legacyId = 'Y5-' + data.requestId;
+    const duplicate = rows.find(row => row[0] && (row[23] === data.requestId || row[0] === legacyId));
     const input = inputCells_(data);
     if (duplicate) {
       // 同じリクエストIDは二重登録しない。内容変更の再利用は拒否。
       if (!input.every((value, i) => duplicate[i + 2] === value || duplicate[i + 2] === literal_(String(value)))) fail_('CONFLICT', '以前の送信と内容が異なります。受付状況をお問い合わせください。');
-      return { ok: true, receiptId: receiptId, duplicate: true };
+      return { ok: true, receiptId: duplicate[0], requestId: data.requestId, duplicate: true };
     }
     const now = new Date();
     if (now >= new Date('2027-01-16T00:00:00+09:00')) fail_('CLOSED', '募集を締め切りました。ご支援ありがとうございます。');
@@ -93,14 +114,15 @@ function save_(data) {
     const index = rows.findIndex(row => !row[0]);
     if (index < 0) fail_('FULL', '受付件数の確認が必要です。お問い合わせください。');
     const rowNumber = index + 2;
-    const values = [receiptId, now, ...input.map(v => typeof v === 'string' ? literal_(v) : v), '未入金', 0, 0, '', '', '未確認', '', '未送信', ''];
-    sheet.getRange(rowNumber, 1, 1, 21).setValues([values]);
-    sheet.getRange(rowNumber, 22, 1, 2).setFormulas([[
+    // 更新前に開かれた旧画面には従来形式を返し、保存済みなのにエラーになることを防ぐ。
+    const receiptId = data.receiptVersion === 2 ? nextReceipt_(rows, now) : legacyId;
+    const values = [receiptId, now, ...input.map(v => typeof v === 'string' ? literal_(v) : v), '未入金', 0, 0, '', '', '未確認', '', '未送信', '',
       '=IF(A' + rowNumber + '="","",IF(M' + rowNumber + '="入金確認済",MAX(0,N' + rowNumber + '-O' + rowNumber + '),0))',
-      '=IF(AND(A' + rowNumber + '<>"",L' + rowNumber + '="同意する",R' + rowNumber + '="承認"),K' + rowNumber + ',"")'
-    ]]);
+      '=IF(AND(A' + rowNumber + '<>"",L' + rowNumber + '="同意する",R' + rowNumber + '="承認"),K' + rowNumber + ',"")', data.requestId];
+    // 受付番号と内部IDを同一の書込に含め、途中失敗後も再送を識別する。
+    sheet.getRange(rowNumber, 1, 1, 24).setValues([values]);
     SpreadsheetApp.flush();
-    return { ok: true, receiptId: receiptId, duplicate: false };
+    return { ok: true, receiptId: receiptId, requestId: data.requestId, duplicate: false };
   } finally { lock.releaseLock(); }
 }
 

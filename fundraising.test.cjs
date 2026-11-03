@@ -64,8 +64,13 @@ function setup() {
  assert.equal(app.get('modal-amount').textContent,'¥3,000');
  assert.ok(app.get('bank-info').children.some(el=>el.textContent==='普通口座：0542458'));
  app.buttons[2].listeners.click();
- app.setResponse(async body=>({ok:true,receiptId:'Y5-'+body.requestId,mailStatus:'送信済'}));await app.submit();
+ app.setResponse(async body=>({ok:true,receiptId:'20261104-001',requestId:body.requestId,mailStatus:'送信済'}));await app.submit();
  assert.notEqual(app.posts[3].requestId,requestId,'changed application must get a new ID');
+ assert.equal(app.posts[3].receiptVersion,2);
+ assert.equal(app.get('receipt-id').textContent,'20261104-001');
+ const mismatch=setup();mismatch.buttons[0].listeners.click();
+ mismatch.setResponse(async()=>({ok:true,receiptId:'20261104-002',requestId:randomUUID(),mailStatus:'送信済'}));
+ await mismatch.submit();assert.equal(mismatch.get('paymentDialog').open,undefined,'receipt for another request must be rejected');
  assert.match(app.query('#paymentDialog .form-note').textContent,/控えメールを送信しました/);
  console.log('PASS: percentage rounding, progress cap, safe message rendering, no amount, network failure, receipt mismatch, retry ID, double submit, mail failure and success');
 })().catch(error=>{console.error(error);process.exitCode=1;});
