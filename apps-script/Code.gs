@@ -3,6 +3,10 @@ const SHEET_ID = '1yh74LKpFgBwufybeNaejLQh4_ubbfKcvgtEXNUC9whg';
 const MAX_ENTRIES = 1000;
 const RELATIONS = ['選手の家族・知人', '企業・団体', '地域・一般', 'SNSファン', '選手の職場'];
 const BANKS = { okinawa: '沖縄銀行', ryukyu: '琉球銀行' };
+// 連続送信対策（いたずらで受付枠・控えメールの送信枠を使い切られないようにする）
+const LIMIT_PER_EMAIL_24H = 5;   // 同じメールアドレスからの申込：24時間で5件まで
+const LIMIT_ALL_1H = 30;         // 全体の新規申込：1時間で30件まで
+const LIMIT_ALL_24H = 100;       // 全体の新規申込：24時間で100件まで（控えメールの1日の送信枠と同程度）
 
 function doPost(e) {
   try {
@@ -81,11 +85,15 @@ function save_(data) {
       if (!input.every((value, i) => duplicate[i + 2] === value || duplicate[i + 2] === literal_(String(value)))) fail_('CONFLICT', '以前の送信と内容が異なります。受付状況をお問い合わせください。');
       return { ok: true, receiptId: receiptId, duplicate: true };
     }
-    if (new Date() >= new Date('2027-01-16T00:00:00+09:00')) fail_('CLOSED', '募集を締め切りました。ご支援ありがとうございます。');
+    const now = new Date();
+    if (now >= new Date('2027-01-16T00:00:00+09:00')) fail_('CLOSED', '募集を締め切りました。ご支援ありがとうございます。');
+    const recent = recentCounts_(rows, data.email, now);
+    if (recent.email24h >= LIMIT_PER_EMAIL_24H) fail_('LIMIT', '同じメールアドレスからのお申し込みは24時間で' + LIMIT_PER_EMAIL_24H + '件までです。追加のご支援はお問い合わせ先までご連絡ください。');
+    if (recent.all1h >= LIMIT_ALL_1H || recent.all24h >= LIMIT_ALL_24H) fail_('BUSY', 'ただいまお申し込みが集中しています。時間をおいて再度お試しいただくか、お問い合わせください。');
     const index = rows.findIndex(row => !row[0]);
     if (index < 0) fail_('FULL', '受付件数の確認が必要です。お問い合わせください。');
     const rowNumber = index + 2;
-    const values = [receiptId, new Date(), ...input.map(v => typeof v === 'string' ? literal_(v) : v), '未入金', 0, 0, '', '', '未確認', '', '未送信', ''];
+    const values = [receiptId, now, ...input.map(v => typeof v === 'string' ? literal_(v) : v), '未入金', 0, 0, '', '', '未確認', '', '未送信', ''];
     sheet.getRange(rowNumber, 1, 1, 21).setValues([values]);
     sheet.getRange(rowNumber, 22, 1, 2).setFormulas([[
       '=IF(A' + rowNumber + '="","",IF(M' + rowNumber + '="入金確認済",MAX(0,N' + rowNumber + '-O' + rowNumber + '),0))',
@@ -94,6 +102,22 @@ function save_(data) {
     SpreadsheetApp.flush();
     return { ok: true, receiptId: receiptId, duplicate: false };
   } finally { lock.releaseLock(); }
+}
+
+// 直近の申込件数を数える（申込日時B列・メールE列）。日時のない行は数えない。
+function recentCounts_(rows, email, now) {
+  const key = String(email).replace(/^'/, '').trim().toLowerCase();
+  const counts = { email24h: 0, all1h: 0, all24h: 0 };
+  rows.forEach(row => {
+    const at = row[1] && typeof row[1].getTime === 'function' ? row[1].getTime() : NaN;
+    if (!row[0] || !Number.isFinite(at)) return;
+    const age = now.getTime() - at;
+    if (age < 0 || age >= 24 * 3600000) return;
+    counts.all24h++;
+    if (age < 3600000) counts.all1h++;
+    if (String(row[4]).replace(/^'/, '').trim().toLowerCase() === key) counts.email24h++;
+  });
+  return counts;
 }
 
 function aggregate_(rows) {
