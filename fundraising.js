@@ -29,7 +29,8 @@ async function refreshPublicData() {
   const percent = data.amount / 1000000 * 100;
   const stats = document.querySelectorAll('.stat-val');
   stats[0].textContent = data.amount.toLocaleString('ja-JP') + ' 円';
-  stats[1].textContent = percent.toFixed(1) + ' %';
+  // 円単位から丸め、0.45%などの浮動小数点誤差を避けてシート表示に合わせる。
+  stats[1].textContent = (Math.round(data.amount / 1000) / 10).toFixed(1) + ' %';
   stats[2].textContent = data.supporters.toLocaleString('ja-JP') + ' 人';
   document.querySelector('.progress-bar').style.width = Math.min(100, percent) + '%';
   document.querySelector('.stats-note').textContent = '入金確認済みの実入金額から返金額を差し引いて集計します。サポーター数はメールアドレス単位です。';
