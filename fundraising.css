@@ -790,7 +790,9 @@
             line-height: 1.5;
         }
         .contact-email {
-            display: inline-flex;
+            display: inline-block;
+            max-width: 100%;
+            overflow-wrap: anywhere;
             align-items: center;
             gap: 8px;
             font-size: 1.1rem;
