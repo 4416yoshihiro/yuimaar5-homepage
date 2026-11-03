@@ -5,7 +5,7 @@
 
 作成したプロジェクト: https://script.google.com/home/projects/1BV600IfmwXjsH9gXdmHmti-ETmoOK1opvzNV6TT6WjOMN63S-nWXCk_N/edit
 
-公開済みウェブアプリ（バージョン4・問い合わせ／返信先統一）: https://script.google.com/macros/s/AKfycbx-FKSr4BfKvSP_sh58HnsbLDpt7sQtEIH1ysaP2mIiwZFTWp_bntEqAQKjvsHwiiyd/exec
+公開済みウェブアプリ（バージョン5・日付別連番対応）: https://script.google.com/macros/s/AKfycbx-FKSr4BfKvSP_sh58HnsbLDpt7sQtEIH1ysaP2mIiwZFTWp_bntEqAQKjvsHwiiyd/exec
 
 1. シート所有者で管理シートを開き「拡張機能 → Apps Script」。
 2. `Code.gs`を貼り付ける。プロジェクトのタイムゾーンはAsia/Tokyo。
@@ -17,6 +17,14 @@
 7. 入金状態・実入金額を変更して公開集計、公開同意と承認を変更してメッセージ表示を確認する。試験行は削除して初期状態に戻す。
 
 ## 運用
+
+- 新規受付番号はYYYYMMDD-001形式。日本時間の日付ごとに連番を採番し、画面・メール・シートで同じ番号を使用する。
+- X列「送信リクエストID（内部）」は自動照合用の非表示UUID列。編集しない。A:Xを1回で保存する。
+- Script Propertiesのreceipt-sequence:YYYYMMDDに発行済み最大連番を保持。保存ロック内でシートの最大連番・当日件数とも照合し、行の削除や書込失敗で番号を再利用しない。欠番が生じる場合がある。
+- 同じ申込の再送は翌日も元の番号を返し、メールを重ねて送らない。既存のY5-UUID番号は維持する。
+- 新画面はreceiptVersion:2を送信し、日付別番号の応答にあるrequestIdを照合。更新前に開かれた旧画面は従来番号で引き続き受付可能。公開GETには内部ID・受付番号を含めない。
+- 公開順はシートX列追加、新画面配信、既存URLのApps Script更新。連番は最低3桁、1000以降は4桁となる。
+- 2026-11-04本番確認：公開フォームから20261104-001を発行し、完了画面・シート保存・控えメール送信済を確認。同じ内容を再送しても番号・行数は不変。試験行は除去し、既存の支援総額1,000円を保持。試験番号001は再利用せず欠番として残す。
 
 - 申込は「未入金」で保存。運営が実入金額N・返金額O・確認日P・名義Qを確認し、Mを「入金確認済」に変更すると支援総額へ反映。
 - サポーター人数は、入金確認後の正味金額が正であるメールアドレスの重複を除いた件数。
