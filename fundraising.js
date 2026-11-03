@@ -70,6 +70,7 @@ form.addEventListener('submit', async event => {
   const payload = Object.fromEntries(new FormData(form));
   payload.amount = submittedAmount;
   payload.messageConsent = payload.messageConsent === 'yes' ? 'yes' : 'no';
+  payload.receiptVersion = 2;
   const fingerprint = JSON.stringify(payload);
   if (!pending || pending.fingerprint !== fingerprint) pending = {fingerprint, requestId:crypto.randomUUID()};
   payload.requestId = pending.requestId;
@@ -79,7 +80,9 @@ form.addEventListener('submit', async event => {
   enabledControls.forEach(el => {el.disabled = true;});
   try {
    const result = await requestApi({method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify(payload)});
-   if (result.receiptId !== 'Y5-' + payload.requestId) throw new Error('受付番号を確認できませんでした。');
+   const legacyReceipt = result.receiptId === 'Y5-' + payload.requestId;
+   const datedReceipt = /^\d{8}-\d{3,}$/.test(result.receiptId) && result.requestId === payload.requestId;
+   if (!legacyReceipt && !datedReceipt) throw new Error('受付番号を確認できませんでした。');
    document.querySelector('#paymentDialog .modal-title').textContent = 'お申し込みを受け付けました';
    document.getElementById('receipt-id').textContent = result.receiptId;
    document.getElementById('receipt-line').hidden = false;
