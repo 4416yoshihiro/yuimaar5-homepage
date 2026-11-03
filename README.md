@@ -22,11 +22,7 @@ http://127.0.0.1:8765/fundraising.html を開いてください。ビルドや�
 | fundraising-config.js | 接続するApps Scriptの公開URL（空欄ならプレビュー） |
 | apps-script/Code.gs | シートへの保存・入力検証・重複防止・公開集計API |
 | apps-script/Receipt.gs | 受付控えメール・送信状態管理・運営による再送 |
-| apps-script/README.md | デプロイと確認手順・運用方法 |
 | assets/fundraising-team-main.jpg | ユーザー指定のメイン写真 |
-| FUNDRAISING-CONTENT.md | 確定原稿・仕様の記録（後半の更新を優先） |
-| FUNDRAISING-LP-PLAN.md | 制作手順・進捗 |
-| REFERENCE-LP-ANALYSIS.md | 参考LPの構成と連携方式の分析 |
 
 ## 既存サイトと別案
 
@@ -44,6 +40,12 @@ GitHub Pagesの公開設定・CNAMEは既存のものを保持しています。
 
 2026-11-03：Apps Scriptバージョン3をデプロイして接続。ローカルLPからの申込保存・受付番号表示・重複防止・入金と返金の集計・同意と承認による本文公開を実機確認済み。チーム用アドレス宛ての控えメール送信処理成功とシートの「送信済」を確認。受信側への到着も今回のチーム用テストメールで確認済み。テスト申込は除去済み。
 
-公開前の検証結果・修正内容・残っている公開手順は [QA-2026-11-03.md](QA-2026-11-03.md) を参照してください。画面側の異常系テストは `node fundraising.test.cjs`、受付APIのテストは `node apps-script/test.cjs` で実行します。
+画面側の異常系テストは `node fundraising.test.cjs`、受付APIのテストは `node apps-script/test.cjs` と `node apps-script/rate-limit.test.cjs` で実行します。
 
 2026-11-03 本番反映：PR #2をマージ（95f39ca）。GitHub Pagesの配信成功を確認し、公開URLから1,000円・琉球銀行のテスト申込、非公開シートへの保存、受付番号・振込先表示、控えメールの受信トレイ到着・内容一致まで確認。テスト行は除去済み。
+
+## 内部資料の置き場所（2026-11-04）
+
+mainのファイルは .nojekyll により yuimaar5.com でそのまま公開されるため、制作メモ・検証記録・運用手順（FUNDRAISING-CONTENT.md、FUNDRAISING-LP-PLAN.md、REFERENCE-LP-ANALYSIS.md、QA-2026-11-03.md、apps-script/README.md）はmainから外し、公開されない `internal-docs` ブランチに保管しています。mainには公開してよいファイルだけを置いてください。
+
+受付APIには連続送信対策として、同じメールアドレスは24時間で5件、全体は1時間30件・24時間100件までの上限があります（apps-script/Code.gs 冒頭の定数）。Code.gsを変更したら、Apps Scriptの「デプロイを管理 → 編集 → 新バージョン」で反映してください。
