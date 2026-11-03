@@ -1,5 +1,5 @@
 /** 受付控え。MailAppの送信権限だけを使い、受信メールにはアクセスしない。 */
-const RECEIPT_REPLY_TO = 'ya0468046@gmail.com';
+const RECEIPT_REPLY_TO = 'baseballokinawa.yuimaar5@gmail.com';
 
 function singleEmail_(email) {
   return typeof email === 'string' && /^[^\s@,;<>"()]+@[^\s@,;<>"()]+\.[^\s@,;<>"()]+$/.test(email);

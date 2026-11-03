@@ -5,7 +5,7 @@
 
 作成したプロジェクト: https://script.google.com/home/projects/1BV600IfmwXjsH9gXdmHmti-ETmoOK1opvzNV6TT6WjOMN63S-nWXCk_N/edit
 
-公開済みウェブアプリ（バージョン3・控えメール対応）: https://script.google.com/macros/s/AKfycbx-FKSr4BfKvSP_sh58HnsbLDpt7sQtEIH1ysaP2mIiwZFTWp_bntEqAQKjvsHwiiyd/exec
+公開済みウェブアプリ（バージョン4・問い合わせ／返信先統一）: https://script.google.com/macros/s/AKfycbx-FKSr4BfKvSP_sh58HnsbLDpt7sQtEIH1ysaP2mIiwZFTWp_bntEqAQKjvsHwiiyd/exec
 
 1. シート所有者で管理シートを開き「拡張機能 → Apps Script」。
 2. `Code.gs`を貼り付ける。プロジェクトのタイムゾーンはAsia/Tokyo。
@@ -23,7 +23,7 @@
 - メッセージはL「同意する」かつR「承認」の本文だけ公開。個人情報を含む本文は運営が確認してから承認する。
 - 1000件まで。超える前にMAX_ENTRIES、シート行数・表・検証・集計範囲を同時に拡張する。
 - 同一画面で通信失敗後に再送信した場合はリクエストIDで重複を防ぐ。画面を閉じて新規申込すると別の受付になるため、入金照合でも重複を確認する。
-- 受付控えメールは申込保存後にMailAppで1通送る。送信元はスクリプト実行者のチームアカウント、返信先はya0468046@gmail.com。受付番号・申込額・選択した銀行の振込先を記載し、電話番号や応援本文は記載しない。
+- 受付控えメールは申込保存後にMailAppで1通送る。送信元はスクリプト実行者のチームアカウント、返信先はbaseballokinawa.yuimaar5@gmail.com。受付番号・申込額・選択した銀行の振込先を記載し、電話番号や応援本文は記載しない。
 - T「控えメール状態」は未送信／送信中／送信済／送信失敗／要確認。送信済はGoogleの送信処理完了を示す。相手への到着や後日の不達までは判定しない。
 - 同じ申込の再送信ではメールを重ねない。メール送信エラーでも申込は保存済みとして振込先を表示する。
 - Gmail個人アカウントのMailApp送信上限は通常1日100宛先。残り枠がなければ申込は保存して未送信とする。枠復旧後、運営が管理シートを開き直し「申込一覧」の対象1行を選び「控えメール → 選択行の未送信・失敗メールを送る」を実行する。送信前の確認あり。送信中のままなら、重複を避けるため送信履歴を確認してから状態を訂正する。
