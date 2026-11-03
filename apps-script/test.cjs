@@ -2,7 +2,7 @@ const {readFileSync} = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const rows = Array.from({length:1000},()=>Array(23).fill(''));
-let locked = false, flushes = 0, writes = 0, quota = 100, mailFails = false;
+let locked = false, flushes = 0, writes = 0, quota = 100, mailFails = false, lockAvailable = true;
 const mails = [];
 const sheet = {getRange(a, b, h, w) {
  if (typeof a === 'string') return {getValue:()=>a === 'A1' ? '受付番号' : '公開本文（自動）'};
@@ -14,7 +14,7 @@ const sheet = {getRange(a, b, h, w) {
 }};
 const context = vm.createContext({
  SpreadsheetApp:{openById:()=>({getSheetByName:()=>sheet}),flush:()=>{assert.ok(locked);flushes++;}},
- LockService:{getScriptLock:()=>({tryLock:()=>{locked=true;return true;},releaseLock:()=>{locked=false;}})},
+ LockService:{getScriptLock:()=>({tryLock:()=>{if(!lockAvailable)return false;locked=true;return true;},releaseLock:()=>{locked=false;}})},
  ContentService:{MimeType:{JSON:'json'},createTextOutput:value=>({setMimeType:()=>JSON.parse(value)})},
  MailApp:{getRemainingDailyQuota:()=>quota,sendEmail:message=>{assert.ok(locked);if(mailFails)throw Error('mail failure');mails.push(message);quota--;}}
 });
@@ -94,4 +94,29 @@ assert.ok(context.mailMemo_(memoRow,'送信理由').startsWith('既存の運営�
 memoRow[20]='既存の運営メモ\n送信理由';
 assert.equal(context.mailMemo_(memoRow,'送信理由'),memoRow[20]);
 assert.equal(locked,false);
+// Capacity, deadline, malformed input and lock contention must fail without saving or emailing.
+const {randomUUID}=require('node:crypto');
+const fresh=changes=>({...request,requestId:randomUUID(),...changes});
+for(const changes of [{amount:100000000},{amount:'1000'},{name:' '},{message:'x'.repeat(1001)},
+ {relation:'unknown'},{payment:'__proto__'},{phone:'abcdef'},{email:'a@example.com;b@example.com'}]) {
+ const before=writes;assert.equal(post(fresh(changes)).code,'INVALID');assert.equal(writes,before);
+}
+assert.equal(context.doPost({postData:{contents:'{broken'}}).ok,false);
+assert.equal(context.doPost({postData:{contents:'x'.repeat(12001)}}).code,'INVALID');
+lockAvailable=false;
+assert.equal(post(fresh({})).code,'BUSY');assert.equal(locked,false);
+lockAvailable=true;
+const NativeDate=Date;
+let testNow='2027-01-15T23:59:59+09:00';
+context.Date=class extends NativeDate {constructor(...args){super(...(args.length?args:[testNow]));}};
+const lastDay=fresh({amount:1});assert.equal(post(lastDay).ok,true);
+testNow='2027-01-16T00:00:00+09:00';
+assert.equal(post(fresh({})).code,'CLOSED');
+assert.equal(post(lastDay).duplicate,true,'saved application retry remains identifiable after close');
+testNow='2027-01-15T12:00:00+09:00';
+const maxAmount=fresh({amount:99999999});assert.equal(post(maxAmount).ok,true);
+rows.forEach((row,i)=>{if(!row[0])row[0]='Y5-capacity-'+i;});
+const beforeFull=writes;assert.equal(post(fresh({})).code,'FULL');assert.equal(writes,beforeFull);
+assert.equal(locked,false);
 console.log('PASS: validation, mapping, idempotency, formula protection, totals/privacy, receipt contents, duplicate mail prevention, mail failure and quota handling');
+console.log('PASS: closing date JST, retry after close, amount bounds, malformed input, lock contention and capacity');
