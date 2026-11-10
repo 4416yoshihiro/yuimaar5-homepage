@@ -20,6 +20,9 @@ function receiptMessage_(row) {
     : row[9] === '琉球銀行'
       ? ['琉球銀行 東風平支店（店番号606）', '普通口座：0542458', '口座名義：オキナワドジャース'] : null;
   if (!bank || !singleEmail_(row[4]) || !Number.isSafeInteger(row[8]) || row[8] < 1) throw new Error('Invalid receipt data');
+  const namePublication = row[24] === '掲載してよい'
+    ? ['お名前の掲載（SNS・横断幕など）：掲載してよい', '掲載名：' + String(row[25] || ''), '掲載希望の変更は、受付番号を添えて下記窓口へご連絡ください。', '']
+    : row[24] === '掲載を希望しない' ? ['お名前の掲載（SNS・横断幕など）：掲載を希望しない', ''] : [];
   return {
     to: row[4], name: '結マール５ 遠征支援窓口', replyTo: RECEIPT_REPLY_TO,
     subject: '【結マール５】ご支援のお申し込み控え（' + row[0] + '）',
@@ -30,7 +33,7 @@ function receiptMessage_(row) {
       '受付番号：' + row[0],
       '申込金額：' + Number(row[8]).toLocaleString('ja-JP') + '円',
       '送金方法：銀行振込（' + row[9] + '）', '',
-      '【お振込先】', ...bank, '',
+      ...namePublication, '【お振込先】', ...bank, '',
       'お申し込みのお名前でお振り込みください。異なる名義の場合は、受付番号と振込名義を下記窓口へお知らせください。',
       '振込手数料はご負担をお願いいたします。',
       'このメールは申込内容の控えです。入金確認・決済完了のお知らせや領収書ではありません。',
@@ -54,7 +57,7 @@ function sendReceipt_(receiptId) {
   if (!lock.tryLock(10000)) return '要確認';
   try {
     const sheet = entries_();
-    const rows = sheet.getRange(2, 1, MAX_ENTRIES, 23).getValues();
+    const rows = sheet.getRange(2, 1, MAX_ENTRIES, 26).getValues();
     const index = rows.findIndex(row => row[0] === receiptId);
     if (index < 0) throw new Error('Receipt not found');
     const row = rows[index], rowNumber = index + 2;
@@ -93,7 +96,7 @@ function sendSelectedReceipt() {
   if (ss.getId() !== SHEET_ID || sheet.getName() !== '申込一覧' || !range || range.getNumRows() !== 1 || range.getRow() < 2 || range.getRow() > MAX_ENTRIES + 1) {
     ui.alert('「申込一覧」で対象の申込を1行だけ選択してください。'); return;
   }
-  const rowNumber = range.getRow(), row = sheet.getRange(rowNumber, 1, 1, 23).getValues()[0];
+  const rowNumber = range.getRow(), row = sheet.getRange(rowNumber, 1, 1, 26).getValues()[0];
   if (!row[0] || !singleEmail_(row[4]) || !['未送信', '送信失敗'].includes(row[19])) {
     ui.alert('受付番号・宛先とメール状態を確認してください。「送信済」「送信中」は二重送信防止のため対象外です。'); return;
   }
@@ -101,7 +104,7 @@ function sendSelectedReceipt() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {ui.alert('混み合っています。再度お試しください。');return;}
   try {
-    const latest = sheet.getRange(rowNumber, 1, 1, 23).getValues()[0];
+    const latest = sheet.getRange(rowNumber, 1, 1, 26).getValues()[0];
     if (latest[0] !== row[0] || latest[4] !== row[4] || !['未送信', '送信失敗'].includes(latest[19])) {
       ui.alert('対象の内容が変わりました。再度確認してください。'); return;
     }

@@ -1,12 +1,12 @@
 const {readFileSync} = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
-const rows = Array.from({length:1000},()=>Array(24).fill(''));
+const rows = Array.from({length:1000},()=>Array(26).fill(''));
 let locked = false, flushes = 0, writes = 0, quota = 100, mailFails = false, lockAvailable = true;
 const mails = [];
 const sequenceProperties = new Map();
 const sheet = {getRange(a, b, h, w) {
- if (typeof a === 'string') return {getValue:()=>a === 'A1' ? '受付番号' : a === 'X1' ? '送信リクエストID（内部）' : '公開本文（自動）'};
+ if (typeof a === 'string') return {getValue:()=>a === 'A1' ? '受付番号' : a === 'X1' ? '送信リクエストID（内部）' : a === 'Y1' ? '氏名掲載同意（SNS・横断幕等）' : a === 'Z1' ? '掲載名' : '公開本文（自動）'};
  return {
   getValues:()=>rows.slice(a-2,a-2+h).map(r=>r.slice(b-1,b-1+w)),
   setValues:values=>{assert.ok(locked);values.forEach((r,i)=>r.forEach((v,j)=>rows[a-2+i][b-1+j]=v));writes++;},
@@ -34,6 +34,8 @@ assert.equal(initial.ok,true);
 assert.match(initial.receiptId,/^\d{8}-001$/);
 assert.equal(initial.requestId,request.requestId);
 assert.equal(rows[0][23],request.requestId);
+assert.equal(rows[0][24],'未取得','old forms do not imply name-publication consent');
+assert.equal(rows[0][25],'');
 assert.equal(initial.mailStatus,'送信済');
 assert.equal(rows[0][12],'未入金');
 assert.equal(rows[0][13],0);
@@ -99,7 +101,7 @@ assert.equal(mails.length,sentBeforeRetry);
 const okinawaBody=context.receiptMessage_(rows[3]).body;
 assert.ok(okinawaBody.includes('沖縄銀行 新都心支店（店番号132）'));
 assert.ok(okinawaBody.includes('普通口座：1621287'));
-const memoRow=Array(24).fill('');memoRow[20]='既存の運営メモ';
+const memoRow=Array(26).fill('');memoRow[20]='既存の運営メモ';
 assert.ok(context.mailMemo_(memoRow,'送信理由').startsWith('既存の運営メモ\n'));
 memoRow[20]='既存の運営メモ\n送信理由';
 assert.equal(context.mailMemo_(memoRow,'送信理由'),memoRow[20]);
@@ -129,7 +131,7 @@ rows.forEach((row,i)=>{if(!row[0])row[0]='Y5-capacity-'+i;});
 const beforeFull=writes;assert.equal(post(fresh({})).code,'FULL');assert.equal(writes,beforeFull);
 assert.equal(locked,false);
 // Daily sequence, legacy compatibility, deletion and retry safety (no live writes).
-rows.forEach((row,i)=>{rows[i]=Array(24).fill('');});sequenceProperties.clear();quota=100;
+rows.forEach((row,i)=>{rows[i]=Array(26).fill('');});sequenceProperties.clear();quota=100;
 testNow='2026-11-03T14:59:59Z';
 const numberedFirst=fresh({});const numberedFirstResult=post(numberedFirst);
 assert.equal(numberedFirstResult.receiptId,'20261103-001');
@@ -140,7 +142,7 @@ assert.equal(sequenceProperties.get('receipt-sequence:20261103'),'2','retry does
 testNow='2026-11-03T15:00:00Z';
 assert.equal(post(fresh({})).receiptId,'20261104-001','midnight JST resets the day');
 assert.equal(post(numberedFirst).receiptId,'20261103-001','next-day retry retains original number');
-rows[2]=Array(24).fill('');
+rows[2]=Array(26).fill('');
 assert.equal(post(fresh({})).receiptId,'20261104-002','cleared rows do not permit number reuse');
 const oldRequest=fresh({receiptVersion:undefined});const oldResult=post(oldRequest);
 assert.equal(oldResult.receiptId,'Y5-'+oldRequest.requestId,'old open forms remain supported');
@@ -153,3 +155,35 @@ assert.ok(mails.at(-1).body.includes('受付番号：20261104-1000'));
 console.log('PASS: JST daily numbering, same-day order, next-day retry, deletion safety, legacy compatibility and four-digit sequence');
 console.log('PASS: validation, mapping, idempotency, formula protection, totals/privacy, receipt contents, duplicate mail prevention, mail failure and quota handling');
 console.log('PASS: closing date JST, retry after close, amount bounds, malformed input, lock contention and capacity');
+// Publication choices are separate from message consent, immutable on retry, and never returned by GET.
+rows.forEach((row,i)=>{rows[i]=Array(26).fill('');});sequenceProperties.clear();quota=100;
+testNow='2026-11-10T12:00:00+09:00';
+const publish=fresh({namePublicationVersion:1,namePublicationConsent:'yes',publicationName:'応援サポーター',messageConsent:'no'});
+const published=post(publish);
+assert.equal(published.ok,true);assert.equal(published.namePublicationSaved,true);
+assert.equal(rows[0][24],'掲載してよい');assert.equal(rows[0][25],'応援サポーター');
+assert.equal(rows[0][11],'同意しない','message consent remains independent');
+assert.ok(mails.at(-1).body.includes('掲載名：応援サポーター'));
+assert.equal(post(publish).duplicate,true);
+assert.equal(post({...publish,publicationName:'別の表記'}).code,'CONFLICT');
+assert.equal(post({...publish,namePublicationConsent:'no',publicationName:''}).code,'CONFLICT');
+const decline=post(fresh({namePublicationVersion:1,namePublicationConsent:'no',publicationName:'残してはいけない'}));
+assert.equal(decline.ok,true);assert.equal(rows[1][24],'掲載を希望しない');assert.equal(rows[1][25],'');
+assert.ok(mails.at(-1).body.includes('掲載を希望しない'));assert.ok(!mails.at(-1).body.includes('残してはいけない'));
+const publicationRowCount=rows.filter(row=>row[0]).length;
+for(const changes of [
+ {namePublicationVersion:1,namePublicationConsent:'yes',publicationName:''},
+ {namePublicationVersion:1,namePublicationConsent:'yes',publicationName:' '.repeat(3)},
+ {namePublicationVersion:1,namePublicationConsent:'yes',publicationName:'x'.repeat(101)},
+ {namePublicationVersion:1,namePublicationConsent:'maybe',publicationName:''},
+ {namePublicationVersion:1,namePublicationConsent:'no'},
+ {namePublicationConsent:'yes',publicationName:'missing-version'},
+ {namePublicationVersion:2,namePublicationConsent:'no',publicationName:''}
+])assert.equal(post(fresh(changes)).code,'INVALID');
+assert.equal(rows.filter(row=>row[0]).length,publicationRowCount);
+const unsafeName=post(fresh({namePublicationVersion:1,namePublicationConsent:'yes',publicationName:'=HYPERLINK("x")'}));
+assert.equal(unsafeName.ok,true);assert.ok(rows[2][25].startsWith("'="));
+const publicPublicationData=JSON.stringify(context.doGet());
+assert.ok(!publicPublicationData.includes('応援サポーター'));assert.ok(!publicPublicationData.includes('掲載してよい'));
+assert.ok(!publicPublicationData.includes('publicationName'));assert.ok(!publicPublicationData.includes('namePublicationConsent'));
+console.log('PASS: name-publication consent/name validation, legacy unknown, private storage, retry conflicts, mail copy and formula protection');

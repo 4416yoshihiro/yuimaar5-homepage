@@ -21,7 +21,7 @@ function doPost(e) {
 function doGet() {
   try {
     const rows = entries_().getRange(2, 1, MAX_ENTRIES, 23).getValues();
-    return json_(Object.assign({ ok: true }, aggregate_(rows)));
+    return json_(Object.assign({ ok: true, namePublicationVersion: 1 }, aggregate_(rows)));
   } catch (error) {
     return json_({ ok: false, code: 'SERVER', message: '集計を取得できませんでした。' });
   }
@@ -48,12 +48,24 @@ function validate_(raw) {
   if (!RELATIONS.includes(data.relation) || !Object.prototype.hasOwnProperty.call(BANKS, data.payment) || !['yes', 'no'].includes(data.messageConsent)) fail_('INVALID', '選択項目を確認してください。');
   if (!Number.isSafeInteger(data.amount) || data.amount < 1 || data.amount > 99999999) fail_('INVALID', '金額は1〜99,999,999円の整数で入力してください。');
   if (raw.website) fail_('INVALID', '受付できませんでした。');
+  // 旧画面の申込は同意未取得。欠けた項目を同意として補わない。
+  data.namePublicationVersion = 0;
+  data.namePublicationConsent = '未取得';
+  data.publicationName = '';
+  if (['namePublicationVersion', 'namePublicationConsent', 'publicationName'].some(key => Object.prototype.hasOwnProperty.call(raw, key))) {
+    if (raw.namePublicationVersion !== 1 || !['yes', 'no'].includes(raw.namePublicationConsent)) fail_('INVALID', 'お名前の掲載について選択してください。');
+    const publicationName = text('publicationName', 100, raw.namePublicationConsent === 'yes');
+    data.namePublicationVersion = 1;
+    data.namePublicationConsent = raw.namePublicationConsent === 'yes' ? '掲載してよい' : '掲載を希望しない';
+    data.publicationName = raw.namePublicationConsent === 'yes' ? publicationName : '';
+  }
   return data;
 }
 
 function entries_() {
   const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('申込一覧');
   if (!sheet || sheet.getRange('A1').getValue() !== '受付番号' || sheet.getRange('W1').getValue() !== '公開本文（自動）' || sheet.getRange('X1').getValue() !== '送信リクエストID（内部）') throw new Error('Sheet schema mismatch');
+  if (sheet.getRange('Y1').getValue() !== '氏名掲載同意（SNS・横断幕等）' || sheet.getRange('Z1').getValue() !== '掲載名') throw new Error('Name publication schema mismatch');
   return sheet;
 }
 
@@ -97,14 +109,15 @@ function save_(data) {
   if (!lock.tryLock(10000)) fail_('BUSY', '混み合っています。少し待って同じ内容で再送信してください。');
   try {
     const sheet = entries_();
-    const rows = sheet.getRange(2, 1, MAX_ENTRIES, 24).getValues();
+    const rows = sheet.getRange(2, 1, MAX_ENTRIES, 26).getValues();
     const legacyId = 'Y5-' + data.requestId;
     const duplicate = rows.find(row => row[0] && (row[23] === data.requestId || row[0] === legacyId));
     const input = inputCells_(data);
     if (duplicate) {
       // 同じリクエストIDは二重登録しない。内容変更の再利用は拒否。
       if (!input.every((value, i) => duplicate[i + 2] === value || duplicate[i + 2] === literal_(String(value)))) fail_('CONFLICT', '以前の送信と内容が異なります。受付状況をお問い合わせください。');
-      return { ok: true, receiptId: duplicate[0], requestId: data.requestId, duplicate: true };
+      if (data.namePublicationVersion === 1 && ![data.namePublicationConsent, data.publicationName].every((value, i) => duplicate[i + 24] === value || duplicate[i + 24] === literal_(value))) fail_('CONFLICT', '以前の送信と掲載希望が異なります。受付番号を添えて運営へお問い合わせください。');
+      return { ok: true, receiptId: duplicate[0], requestId: data.requestId, duplicate: true, namePublicationSaved: data.namePublicationVersion === 1 };
     }
     const now = new Date();
     if (now >= new Date('2027-01-16T00:00:00+09:00')) fail_('CLOSED', '募集を締め切りました。ご支援ありがとうございます。');
@@ -118,11 +131,11 @@ function save_(data) {
     const receiptId = data.receiptVersion === 2 ? nextReceipt_(rows, now) : legacyId;
     const values = [receiptId, now, ...input.map(v => typeof v === 'string' ? literal_(v) : v), '未入金', 0, 0, '', '', '未確認', '', '未送信', '',
       '=IF(A' + rowNumber + '="","",IF(M' + rowNumber + '="入金確認済",MAX(0,N' + rowNumber + '-O' + rowNumber + '),0))',
-      '=IF(AND(A' + rowNumber + '<>"",L' + rowNumber + '="同意する",R' + rowNumber + '="承認"),K' + rowNumber + ',"")', data.requestId];
+      '=IF(AND(A' + rowNumber + '<>"",L' + rowNumber + '="同意する",R' + rowNumber + '="承認"),K' + rowNumber + ',"")', data.requestId, data.namePublicationConsent, literal_(data.publicationName)];
     // 受付番号と内部IDを同一の書込に含め、途中失敗後も再送を識別する。
-    sheet.getRange(rowNumber, 1, 1, 24).setValues([values]);
+    sheet.getRange(rowNumber, 1, 1, 26).setValues([values]);
     SpreadsheetApp.flush();
-    return { ok: true, receiptId: receiptId, requestId: data.requestId, duplicate: false };
+    return { ok: true, receiptId: receiptId, requestId: data.requestId, duplicate: false, namePublicationSaved: data.namePublicationVersion === 1 };
   } finally { lock.releaseLock(); }
 }
 

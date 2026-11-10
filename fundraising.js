@@ -6,9 +6,24 @@ const form = document.getElementById('fundraisingForm');
 const custom = document.getElementById('custom-donation');
 const buttons = [...document.querySelectorAll('[data-amount]')];
 const status = document.getElementById('form-status');
+const publicationGroup = document.getElementById('publication-name-group');
+const publicationInput = document.getElementById('publication-name');
+const publicationChoices = [...document.querySelectorAll('[name="namePublicationConsent"]')];
+function updateNamePublication() {
+ const allowed = form.elements.namePublicationConsent.value === 'yes';
+ publicationGroup.hidden = !allowed;
+ publicationInput.disabled = !allowed;
+ publicationInput.required = allowed;
+ if (!allowed) publicationInput.value = '';
+}
+publicationChoices.forEach(choice => choice.addEventListener('change', updateNamePublication));
+updateNamePublication();
 let amount = 0;
 let pending = null;
 let submitting = false;
+// 新画面が旧APIへ同意内容を送って失うことを防ぐ。GETで対応版を確認してから受付する。
+let publicationBackendReady = !connected;
+if (connected) form.querySelector('.submit-btn').disabled = true;
 async function requestApi(options = {}) {
  const controller = new AbortController();
  const timer = setTimeout(() => controller.abort(), 25000);
@@ -26,6 +41,9 @@ async function refreshPublicData() {
  try {
   const data = await requestApi();
   if (!Number.isFinite(data.amount) || data.amount < 0 || !Number.isSafeInteger(data.supporters) || data.supporters < 0 || !Array.isArray(data.messages)) throw new Error('Invalid public data');
+  publicationBackendReady = data.namePublicationVersion === 1;
+  form.querySelector('.submit-btn').disabled = !publicationBackendReady || submitting;
+  if (!publicationBackendReady) status.textContent = '受付システムを更新しています。少し時間をおいてページを開き直してください。';
   const percent = data.amount / 1000000 * 100;
   const stats = document.querySelectorAll('.stat-val');
   stats[0].textContent = data.amount.toLocaleString('ja-JP') + ' 円';
@@ -63,7 +81,12 @@ custom.addEventListener('input', () => {buttons.forEach(b => {b.classList.remove
 form.addEventListener('submit', async event => {
  event.preventDefault();
  if (submitting) return;
+ if (connected && !publicationBackendReady) {status.textContent = '受付の準備を確認しています。少し時間をおいてページを開き直してください。';return;}
  if (amount <= 0) {status.textContent = '寄付金額を選択するか、円単位の正の整数で入力してください。';custom.focus();return;}
+ const publicationConsent = form.elements.namePublicationConsent.value;
+ if (!['yes', 'no'].includes(publicationConsent)) {status.textContent = 'お名前の掲載について選択してください。';publicationChoices[0].focus();return;}
+ const publicationName = publicationConsent === 'yes' ? publicationInput.value.trim() : '';
+ if (publicationConsent === 'yes' && !publicationName) {status.textContent = '掲載するお名前を入力してください。';publicationInput.focus();return;}
  const bank = form.elements.payment.value;
  const submittedAmount = amount;
  if (connected) {
@@ -71,6 +94,9 @@ form.addEventListener('submit', async event => {
   payload.amount = submittedAmount;
   payload.messageConsent = payload.messageConsent === 'yes' ? 'yes' : 'no';
   payload.receiptVersion = 2;
+  payload.namePublicationVersion = 1;
+  payload.namePublicationConsent = publicationConsent;
+  payload.publicationName = publicationName;
   const fingerprint = JSON.stringify(payload);
   if (!pending || pending.fingerprint !== fingerprint) pending = {fingerprint, requestId:crypto.randomUUID()};
   payload.requestId = pending.requestId;
@@ -82,6 +108,7 @@ form.addEventListener('submit', async event => {
    const result = await requestApi({method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify(payload)});
    const legacyReceipt = result.receiptId === 'Y5-' + payload.requestId;
    const datedReceipt = /^\d{8}-\d{3,}$/.test(result.receiptId) && result.requestId === payload.requestId;
+   if (result.namePublicationSaved !== true) throw new Error('掲載希望の保存を確認できませんでした。');
    if (!legacyReceipt && !datedReceipt) throw new Error('受付番号を確認できませんでした。');
    document.querySelector('#paymentDialog .modal-title').textContent = 'お申し込みを受け付けました';
    document.getElementById('receipt-id').textContent = result.receiptId;
@@ -101,6 +128,11 @@ form.addEventListener('submit', async event => {
    submitting = false;
   }
  }
+ const publicationSummary = document.getElementById('name-publication-summary');
+ publicationSummary.hidden = false;
+ publicationSummary.textContent = publicationConsent === 'yes'
+  ? 'お名前の掲載（SNS・横断幕など）：掲載してよい／掲載名：' + publicationName
+  : 'お名前の掲載（SNS・横断幕など）：掲載を希望しない';
  const bankInfo = document.getElementById('bank-info');
  const copyButton = document.getElementById('copy-bank');
  document.getElementById('bank-title').textContent = bank === 'okinawa' ? '🏦 沖縄銀行 振込先' : '🏦 琉球銀行 振込先';
