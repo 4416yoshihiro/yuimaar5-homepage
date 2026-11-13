@@ -4,10 +4,10 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const {randomUUID} = require('node:crypto');
 function setup() {
- const rows = Array.from({length:1000},()=>Array(24).fill(''));
+ const rows = Array.from({length:1000},()=>Array(26).fill(''));
  let locked = false; const mails = []; const state = {now:'2026-12-01T10:00:00+09:00'};
  const sheet = {getRange(a, b, h, w) {
-  if (typeof a === 'string') return {getValue:()=>a === 'A1' ? '受付番号' : a === 'X1' ? '送信リクエストID（内部）' : '公開本文（自動）'};
+  if (typeof a === 'string') return {getValue:()=>a === 'A1' ? '受付番号' : a === 'X1' ? '送信リクエストID（内部）' : a === 'Y1' ? '氏名掲載同意（SNS・横断幕等）' : a === 'Z1' ? '掲載名' : '公開本文（自動）'};
   return {getValues:()=>rows.slice(a-2,a-2+h).map(r=>r.slice(b-1,b-1+w)),
    setValues:v=>v.forEach((r,i)=>r.forEach((x,j)=>rows[a-2+i][b-1+j]=x)),
    setFormulas:v=>v.forEach((r,i)=>r.forEach((x,j)=>rows[a-2+i][b-1+j]=x))};

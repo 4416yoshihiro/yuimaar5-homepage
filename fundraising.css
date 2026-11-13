@@ -1209,3 +1209,5 @@
 
 .outside-payment{margin:24px 0 30px;padding:22px 18px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fffafa}.outside-paypay-button{display:block;width:100%;padding:15px 18px;border:0;border-radius:var(--radius-sm);background:#b54050;color:white;font:inherit;font-weight:700}.outside-paypay-button:disabled{cursor:not-allowed;opacity:.65}.outside-payment .form-note{margin-bottom:0}
 .form-trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}.submit-btn:disabled{opacity:.65;cursor:wait}.public-support-message{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px 0;border-bottom:1px solid var(--border)}#receipt-id{overflow-wrap:anywhere;font-size:.85rem}
+
+.name-publication-section{border-top:1px solid var(--border);padding-top:24px;margin-top:24px}.name-publication-section [hidden]{display:none!important}#publication-name-group{margin-top:20px}#name-publication-summary{white-space:pre-wrap;overflow-wrap:anywhere}
