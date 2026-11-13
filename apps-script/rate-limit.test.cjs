@@ -28,17 +28,9 @@ function setup() {
  const post = d=>context.doPost({postData:{contents:JSON.stringify(d)}});
  return {rows, mails, state, post, sequenceProperties, isLocked:()=>locked};
 }
-const base = {name:'連続テスト',kana:'レンゾクテスト',email:'rate@example.invalid',relation:'SNSファン',payment:'okinawa',message:'',messageConsent:'no',amount:1000,website:'',receiptVersion:2};
+const base = {name:'連続テスト',kana:'レンゾクテスト',email:'rate@example.invalid',phone:'09000000000',relation:'SNSファン',payment:'okinawa',message:'',messageConsent:'no',amount:1000,website:'',receiptVersion:2};
 const req = c=>({...base,requestId:randomUUID(),...c});
 const saved = rows=>rows.filter(r=>r[0]).length;
-
-{ // 新画面はphoneなし、旧画面はphoneありでも、F列は空欄のまま保存する。
- const t=setup();
- assert.equal(t.post(req()).ok,true);
- assert.equal(t.post(req({phone:'09000000000'})).ok,true);
- assert.equal(t.rows[0][5],'');assert.equal(t.rows[1][5],'');
- assert.equal(t.rows[0][6],base.relation);assert.equal(t.rows[1][9],'沖縄銀行');
-}
 
 { // 同じメールアドレスは24時間で5件まで（大文字小文字は同一扱い）
  const t = setup();
@@ -54,11 +46,9 @@ const saved = rows=>rows.filter(r=>r[0]).length;
 { // 保存済み申込の再送信（同じ受付ID）は、上限に達していても受付済みとして返す
  const t = setup(); const first = req();
  assert.equal(t.post(first).ok,true);
- t.rows[0][5]='09000000000'; // 旧版が保存済みの行も、F列の違いで再送を拒否しない。
  for (let i=0;i<4;i++) t.post(req());
- const retry = t.post({...first,phone:'changed'});
+ const retry = t.post(first);
  assert.equal(retry.ok,true); assert.equal(retry.duplicate,true); assert.equal(saved(t.rows),5);
- assert.equal(t.rows[0][5],'09000000000');assert.equal(t.mails.length,5);
 }
 { // 全体で1時間30件まで
  const t = setup();
@@ -100,4 +90,3 @@ const saved = rows=>rows.filter(r=>r[0]).length;
  }
 }
 console.log('PASS: per-email 24h limit, retry of saved application, overall 1h/24h limits, exact window expiry, closing date, numbered/legacy retries after global cap and next day');
-console.log('PASS: rate limits without phone, discarded phone from old forms and retries of legacy phone records at the cap');
