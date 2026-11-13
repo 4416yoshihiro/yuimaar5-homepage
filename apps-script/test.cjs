@@ -40,7 +40,7 @@ assert.equal(initial.mailStatus,'送信済');
 assert.equal(rows[0][12],'未入金');
 assert.equal(rows[0][13],0);
 assert.equal(rows[0][9],'琉球銀行');
-assert.equal(rows[0][5],'09000000000');
+assert.equal(rows[0][5],'','phone from an old form must not be saved');
 assert.ok(flushes >= 3);
 assert.equal(mails.length,1);
 assert.equal(mails[0].to,request.email);
@@ -110,7 +110,7 @@ assert.equal(locked,false);
 const {randomUUID}=require('node:crypto');
 const fresh=changes=>({...request,requestId:randomUUID(),...changes});
 for(const changes of [{amount:100000000},{amount:'1000'},{name:' '},{message:'x'.repeat(1001)},
- {relation:'unknown'},{payment:'__proto__'},{phone:'abcdef'},{email:'a@example.com;b@example.com'}]) {
+ {relation:'unknown'},{payment:'__proto__'},{email:'a@example.com;b@example.com'},{email:''},{email:'invalid'},{email:undefined}]) {
  const before=writes;assert.equal(post(fresh(changes)).code,'INVALID');assert.equal(writes,before);
 }
 assert.equal(context.doPost({postData:{contents:'{broken'}}).ok,false);
@@ -187,3 +187,30 @@ const publicPublicationData=JSON.stringify(context.doGet());
 assert.ok(!publicPublicationData.includes('応援サポーター'));assert.ok(!publicPublicationData.includes('掲載してよい'));
 assert.ok(!publicPublicationData.includes('publicationName'));assert.ok(!publicPublicationData.includes('namePublicationConsent'));
 console.log('PASS: name-publication consent/name validation, legacy unknown, private storage, retry conflicts, mail copy and formula protection');
+// Phone is ignored for both old and new forms; existing F values are not changed by retries.
+rows.forEach((row,i)=>{rows[i]=Array(26).fill('');});sequenceProperties.clear();quota=100;
+testNow='2026-11-13T12:00:00+09:00';
+const noPhone=fresh({namePublicationVersion:1,namePublicationConsent:'no',publicationName:''});delete noPhone.phone;
+assert.equal(Object.prototype.hasOwnProperty.call(context.validate_(noPhone),'phone'),false);
+const noPhoneResult=post(noPhone);assert.equal(noPhoneResult.ok,true);assert.equal(noPhoneResult.mailStatus,'送信済');
+assert.equal(rows[0][5],'');assert.equal(rows[0].length,26);
+assert.equal(rows[0][6],noPhone.relation);assert.equal(rows[0][8],noPhone.amount);assert.equal(rows[0][9],'琉球銀行');
+assert.equal(rows[0][23],noPhone.requestId);assert.equal(rows[0][24],'掲載を希望しない');
+for(const [i,phone] of ['',null,12345,'abcdef','=HYPERLINK("phone")',{phone:'legacy-value'}].entries()) {
+ const ignored=fresh({phone,email:`phone${i}@example.invalid`});
+ assert.equal(Object.prototype.hasOwnProperty.call(context.validate_(ignored),'phone'),false);
+ assert.equal(post(ignored).ok,true,'phone input must be ignored regardless of type/format');
+ assert.equal(rows[i+1][5],'');
+}
+rows[0][5]='09000000000'; // Existing record created before phone collection was discontinued.
+const phoneRetryWrites=writes,phoneRetryMails=mails.length;
+for(const retry of [noPhone,{...noPhone,phone:'changed'},{...noPhone,phone:null}]) {
+ const result=post(retry);assert.equal(result.ok,true);assert.equal(result.duplicate,true);assert.equal(result.receiptId,noPhoneResult.receiptId);
+}
+assert.equal(writes,phoneRetryWrites);assert.equal(mails.length,phoneRetryMails);
+assert.equal(rows[0][5],'09000000000','API retries must not clear existing personal data before approved cleanup');
+for(const changes of [{name:'別名'},{kana:'ベツメイ'},{email:'changed@example.invalid'},{relation:'地域・一般'},
+ {amount:1000},{payment:'okinawa'},{message:'changed'},{messageConsent:'yes'}]) assert.equal(post({...noPhone,...changes}).code,'CONFLICT');
+assert.equal(context.doGet().amount,0);assert.ok(!JSON.stringify(context.doGet()).includes('09000000000'));
+assert.equal(post({...noPhone,email:'invalid'}).message,'メールアドレスを確認してください。');
+console.log('PASS: phoneless requests, ignored phone values, fixed column positions, legacy phone retry compatibility and unchanged conflict/email checks');
