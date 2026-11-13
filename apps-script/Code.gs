@@ -38,13 +38,13 @@ function validate_(raw) {
   const data = {
     requestId: text('requestId', 36, true), name: text('name', 100, true),
     kana: text('kana', 100, true), email: text('email', 254, true),
-    relation: text('relation', 30, true),
+    phone: text('phone', 30, true), relation: text('relation', 30, true),
     payment: text('payment', 20, true), message: text('message', 1000, false),
     messageConsent: text('messageConsent', 3, true), amount: raw.amount,
     receiptVersion: raw.receiptVersion === 2 ? 2 : 1
   };
   if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(data.requestId)) fail_('INVALID', '受付番号を生成し直してください。');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) fail_('INVALID', 'メールアドレスを確認してください。');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !/^[0-9+()\-\s]{6,30}$/.test(data.phone)) fail_('INVALID', 'メールアドレス・電話番号を確認してください。');
   if (!RELATIONS.includes(data.relation) || !Object.prototype.hasOwnProperty.call(BANKS, data.payment) || !['yes', 'no'].includes(data.messageConsent)) fail_('INVALID', '選択項目を確認してください。');
   if (!Number.isSafeInteger(data.amount) || data.amount < 1 || data.amount > 99999999) fail_('INVALID', '金額は1〜99,999,999円の整数で入力してください。');
   if (raw.website) fail_('INVALID', '受付できませんでした。');
@@ -76,12 +76,11 @@ function fail_(code, message) {
   throw error;
 }
 
-// 入力から数式を実行させない。
+// 入力から数式を実行させない。電話番号の先頭0は列書式TEXTで保持。
 function literal_(value) { return /^[=+\-@']/.test(value) ? "'" + value : value; }
 
 function inputCells_(data) {
-  // 廃止した電話番号のF列は空欄で維持し、後続の列位置を変えない。
-  return [data.name, data.kana, data.email, '', data.relation, '寄付', data.amount,
+  return [data.name, data.kana, data.email, data.phone, data.relation, '寄付', data.amount,
     BANKS[data.payment], data.message, data.messageConsent === 'yes' ? '同意する' : '同意しない'];
 }
 
@@ -115,8 +114,8 @@ function save_(data) {
     const duplicate = rows.find(row => row[0] && (row[23] === data.requestId || row[0] === legacyId));
     const input = inputCells_(data);
     if (duplicate) {
-      // 廃止したF列を除き、同じリクエストIDの内容変更は拒否する。
-      if (!input.every((value, i) => i === 3 || duplicate[i + 2] === value || duplicate[i + 2] === literal_(String(value)))) fail_('CONFLICT', '以前の送信と内容が異なります。受付状況をお問い合わせください。');
+      // 同じリクエストIDは二重登録しない。内容変更の再利用は拒否。
+      if (!input.every((value, i) => duplicate[i + 2] === value || duplicate[i + 2] === literal_(String(value)))) fail_('CONFLICT', '以前の送信と内容が異なります。受付状況をお問い合わせください。');
       if (data.namePublicationVersion === 1 && ![data.namePublicationConsent, data.publicationName].every((value, i) => duplicate[i + 24] === value || duplicate[i + 24] === literal_(value))) fail_('CONFLICT', '以前の送信と掲載希望が異なります。受付番号を添えて運営へお問い合わせください。');
       return { ok: true, receiptId: duplicate[0], requestId: data.requestId, duplicate: true, namePublicationSaved: data.namePublicationVersion === 1 };
     }
