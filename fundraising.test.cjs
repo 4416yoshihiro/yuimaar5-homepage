@@ -3,6 +3,11 @@ const {readFileSync} = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const {randomUUID} = require('node:crypto');
+const html=readFileSync(__dirname+'/fundraising.html','utf8');
+const formMarkup=html.match(/<form\b[^>]*\bid="fundraisingForm"[^>]*>([\s\S]*?)<\/form>/)[1];
+const formFieldNames=new Set([...formMarkup.matchAll(/<(?:input|select|textarea)\b[^>]*\bname="([^"]+)"[^>]*>/g)].map(match=>match[1]));
+assert.equal(formFieldNames.has('phone'),false,'the actual HTML form must not collect phone numbers');
+assert.doesNotMatch(formMarkup,/(?:for|id)="phone"|type="tel"|autocomplete="tel"|電話番号/,'remove the phone label and input together');
 function element() {
  return {textContent:'', value:'', hidden:true, disabled:false, style:{}, dataset:{}, children:[], listeners:{},
   classList:{toggle(){},remove(){}}, setAttribute(){}, focus(){},
@@ -17,6 +22,7 @@ function setup() {
  const buttons=[1000,3000,5000,10000].map(n=>Object.assign(element(),{dataset:{amount:String(n)}}));
  const stats=Array.from({length:4},element), banners=[element(),element()], publicationChoices=[element(),element()];
  const form=get('fundraisingForm');form.elements=[element(),element()];form.elements.payment={value:'ryukyu'};form.elements.namePublicationConsent={value:'no'};form.querySelector=query;
+ // Keep an old phone fixture so the HTML-derived FormData would expose a reintroduced phone control.
  const payload={name:'テスト',kana:'テスト',email:'test@example.invalid',phone:'00000000000',relation:'SNSファン',payment:'ryukyu',message:'',website:''};
  const posts=[];let response=async body=>({ok:true,receiptId:'Y5-'+body.requestId,namePublicationSaved:true,mailStatus:'送信済'});
  const publicData={ok:true,amount:0,supporters:0,messages:[],namePublicationVersion:1};
@@ -24,7 +30,7 @@ function setup() {
   window:{FUNDRAISING_CONFIG:{apiUrl:'https://script.google.com/macros/s/test/exec'}},
   document:{getElementById:get,querySelector:query,querySelectorAll:s=>s==='[data-amount]'?buttons:s==='.stat-val'?stats:s==='[name="namePublicationConsent"]'?publicationChoices:banners,
    createElement:element,createTextNode:text=>({textContent:text})},
-  FormData:class{constructor(){return Object.entries(payload);}},
+  FormData:class{constructor(){return Object.entries(payload).filter(([name])=>formFieldNames.has(name));}},
   crypto:{randomUUID},AbortController,setTimeout,clearTimeout,
   navigator:{clipboard:{writeText:async()=>{}}},
   fetch:async(url,options)=>{
@@ -67,6 +73,10 @@ function setup() {
  app.setResponse(async body=>({ok:true,receiptId:'20261104-001',requestId:body.requestId,namePublicationSaved:true,mailStatus:'送信済'}));await app.submit();
  assert.notEqual(app.posts[3].requestId,requestId,'changed application must get a new ID');
  assert.equal(app.posts[3].receiptVersion,2);
+ for(const submitted of app.posts) {
+  assert.equal(Object.prototype.hasOwnProperty.call(submitted,'phone'),false,'POST payload must not contain phone');
+  for(const name of ['name','kana','email','relation','payment','message','website']) assert.equal(submitted[name],app.payload[name],'keep the other form fields');
+ }
  assert.equal(app.get('receipt-id').textContent,'20261104-001');
  const mismatch=setup();await mismatch.context.refreshPublicData();mismatch.buttons[0].listeners.click();
  mismatch.setResponse(async()=>({ok:true,receiptId:'20261104-002',requestId:randomUUID(),namePublicationSaved:true,mailStatus:'送信済'}));
@@ -94,6 +104,8 @@ function setup() {
  outdated.buttons[0].listeners.click();await outdated.submit();
  assert.equal(outdated.posts.length,0,'do not POST publication choices to an API that cannot store them');
  assert.equal(outdated.query('.submit-btn').disabled,true);
+ assert.ok(publication.posts.every(submitted=>!Object.prototype.hasOwnProperty.call(submitted,'phone')),'both publication choices must omit phone');
+ console.log('PASS: actual HTML has no phone label/control; HTML-derived FormData and POST payloads omit phone while retaining other fields');
  console.log('PASS: explicit name-publication choices, conditional name validation, clearing declined names, payload/receipt summary and save acknowledgement');
  console.log('PASS: percentage rounding, progress cap, safe message rendering, no amount, network failure, receipt mismatch, retry ID, double submit, mail failure and success');
 })().catch(error=>{console.error(error);process.exitCode=1;});
